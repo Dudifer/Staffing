@@ -84,6 +84,9 @@ def aggregate(filename):
     
     # Print the resulting dataframe
     print(summary_df.head(60))
+    
+    # Export the dataframe to a csv
+    summary_df.to_csv("Staff_Summary.csv")
    
 def time_diff (t1, t2):
 
