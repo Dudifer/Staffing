@@ -75,7 +75,9 @@ def aggregate(filename):
             # Append the week's data to the list of summary rows
             summary_rows.append(week_data)
         
+        # Add the total hcw summary at the bottom of each hcw's data
         summary_rows.append(hcw_summary_row)
+        
     # Concatenate all the summary rows into a single dataframe
     summary_df = pd.concat(summary_rows, ignore_index=True)
     
