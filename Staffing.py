@@ -21,28 +21,36 @@ group by hid, vdate) t
     and nweek is an integer (the "iso week" of the year)
     and ndays is an integer counting number of days in the interval
     '''
-days=pd.DataFrame({'hcw':[1004]*5+[1005]*4,'date':['2023/06/05','2023/06/06','2023/06/07','2023/06/12','2023/06/13']+['2023/06/08','2023/06/09','2023/06/10','2023/06/11'],\
-                'week':[1,1,1,2,2,1,1,1,1],'uid':[1,2,2,1,1,3,3,3,3],'#days_worked':[1]*9,'jtid':[1004]*5+[1004]*4,'#visits':[9,3,4,7,9,6,5,7,6],'#rooms':[3,2,2,3,4,5,5,5,5],\
-                'sday':[5+23/60,5+31/60,5+31/60,5+31/60,5+30/60,5+25/60,5+14/60,5+28/60,5+37/60],'eday':[13+58/60]*3+[14+22/60,13+5/60,3.75,3+52/60,3+47/60,3+59/60],\
-                'day_dur':[(13+58/60)-(5+23/60),(13+58/60)-(5+31/60),(13+58/60)-(5+31/60),(14+22/60)-(5+31/60),(13+5/60)-(5+30/60)]+[8.12]*3+[8.23]})
-days['period']='day'
-days.set_index(['hcw','date'])
+days=pd.DataFrame({'hcw':[1004]*5+[1005]*4,'period':['day']*9,'date':['2023/06/05','2023/06/06','2023/06/07','2023/06/12','2023/06/13']+['2023/06/08','2023/06/09','2023/06/10','2023/06/11'],\
+                'nday':[0,1,2,0,1,3,4,5,6],'nweek':[1,1,1,2,2,1,1,1,1],'ndays':[1]*9,'uid':[1,2,2,1,1,3,3,3,3],'jtid':[1004]*5+[1004]*4,'nvisits':[9,3,4,7,9,6,5,7,6],'nrooms':[3,2,2,3,4,5,5,5,5],\
+                'stime':[5+23/60,5+31/60,5+31/60,5+31/60,5+30/60,5+25/60,5+14/60,5+28/60,5+37/60],'etime':[13+58/60]*3+[14+22/60,13+5/60,3.75,3+52/60,3+47/60,3+59/60],\
+                'time_diff':[(13+58/60)-(5+23/60),(13+58/60)-(5+31/60),(13+58/60)-(5+31/60),(14+22/60)-(5+31/60),(13+5/60)-(5+30/60)]+[8.12]*3+[8.23]})
+
 dwdf=pd.DataFrame(dict(zip(days.columns,[[]]*len(days.columns))))
 hcw_totals=pd.DataFrame(dict(zip(days.columns,[[]]*len(days.columns))))
 
     
     
 for hcw, ddf in days.groupby(['hcw']):
-    sum=pd.DataFrame({'hcw':ddf['hcw'].mode()[0],'date':'{}-{}'.format(ddf['date'].iloc[0],ddf['date'].iloc[-1]),\
-                    'week':ddf['week'].iloc[0],'uid':ddf['uid'].mode()[0],'#days_worked':ddf['#days_worked'].sum(),'jtid':ddf['jtid'].mode()[0],\
-                    '#visits':ddf['#visits'].sum(),'#rooms':ddf['#rooms'].sum(),'sday':ddf['sday'].min(),'eday':ddf['eday'].max(),\
-                    'day_dur':ddf['eday'].max()-ddf['sday'].min(),'period':'all'}, index=ddf['hcw'].unique())
-    for w, wdf in ddf.groupby(['week']):
+    sum=pd.DataFrame({'hcw':ddf['hcw'].mode()[0],
+                    'date':'{}-{}'.format(ddf['date'].iloc[0],ddf['date'].iloc[-1]),
+                    'nday':7,
+                    'nweek':ddf['nweek'].iloc[0],
+                    'ndays':ddf['ndays'].sum(),
+                    'uid':ddf['uid'].mode()[0],
+                    'jtid':ddf['jtid'].mode()[0],
+                    'nvisits':ddf['nvisits'].sum(),
+                    'nrooms':ddf['nrooms'].sum(),
+                    'stime':ddf['stime'].min(),
+                    'etime':ddf['etime'].max(),
+                    'time_diff':ddf['etime'].max()-ddf['stime'].min(),
+                    'period':'all'}, index=ddf['hcw'].unique())
+    for w, wdf in ddf.groupby(['nweek']):
                 
         wdf=wdf.append({'hcw':wdf['hcw'].mode()[0],'date':'{}-{}'.format(wdf['date'].iloc[0][6:],wdf['date'].iloc[-1][6:]),\
-                    'week':wdf['week'].iloc[0],'uid':wdf['uid'].mode()[0],'#days_worked':wdf['#days_worked'].sum(),'jtid':wdf['jtid'].mode()[0],\
-                    '#visits':wdf['#visits'].sum(),'#rooms':wdf['#rooms'].sum(),'sday':wdf['sday'].min(),'eday':wdf['eday'].max(),\
-                    'day_dur':wdf['eday'].max()-wdf['sday'].min(),'period':'week'}, ignore_index=True)
+                    'nday':8,'nweek':wdf['nweek'].iloc[0],'uid':wdf['uid'].mode()[0],'ndays':wdf['ndays'].sum(),'jtid':wdf['jtid'].mode()[0],\
+                    'nvisits':wdf['nvisits'].sum(),'nrooms':wdf['nrooms'].sum(),'stime':wdf['stime'].min(),'etime':wdf['etime'].max(),\
+                    'time_diff':wdf['etime'].max()-wdf['stime'].min(),'period':'week'}, ignore_index=True)
         dwdf=dwdf.append(wdf)
     dwdf=dwdf.append(sum, ignore_index=True)
     
@@ -77,15 +85,18 @@ def filetoSQL(s):
     GROUP BY date, v.hid'
     return q
 def staffing(filename):
-    s,e='',''
+    w=''
     with open(filename, 'r') as f:
         for line in f:
             info=[part.strip().lower() for part in line.split(':')]
             dt=parser.parse(':'.join(info[1:]))
-            if info[0]=='start':
-                s=dt
-            else:
-                e=dt
+            match info[0]:
+                case 'start':
+                        
+                    
+                    w+=' AND v.itime >= "'+str(parser.parse(':'.join(info[1:])))+'"'
+                case 'end':
+                    w+=' AND v.itime <= "'+str(parser.parse(':'.join(info[1:])))+'"'
     
     
 
