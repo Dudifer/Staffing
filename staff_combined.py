@@ -41,9 +41,8 @@ with open(filename, "r") as config:
                 try:
                     where += " AND v.shift = '" + line[1].replace(" ", "") +"'"
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
             case "hid":
                 try:
                     hid_list = []
@@ -54,9 +53,8 @@ with open(filename, "r") as config:
                         where += str(item) + ","
                     where = where[:-1] + ") "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
             case "uid":
                 try:
                     where += " AND r.uid in ("
@@ -67,8 +65,7 @@ with open(filename, "r") as config:
                         where += str(item) + ","
                     where = where[:-1] + ") "
                 except:
-                    print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
-                    exit()
+                    raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
             case "did":
                 try:
                     where += " AND h.did in ("
@@ -79,9 +76,8 @@ with open(filename, "r") as config:
                         where += str(item) + ","
                     where = where[:-1] + ") "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
             case "jtid":
                 try:
                     where += " AND j.jtid in ("
@@ -92,9 +88,8 @@ with open(filename, "r") as config:
                         where += str(item) + ","
                     where = where[:-1] + ") "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
             case "ftid":
                 try:
                     from1 += ", facilities f"
@@ -107,9 +102,8 @@ with open(filename, "r") as config:
                         where += str(item) + ","
                     where = where[:-1] + ") "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
             case "itime":
                 try:
                     itime = ":".join(line[1:])
@@ -121,9 +115,9 @@ with open(filename, "r") as config:
                     else: 
                         where += " AND v.itime > '" + itime + "' "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
+                        
             case "otime":
                 try: 
                     otime = ":".join(line[1:])
@@ -135,11 +129,11 @@ with open(filename, "r") as config:
                     else: 
                         where += " AND v.otime < '" + otime + "' "
                 except:
-                        print('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
+                        raise Exception('invalid format: {} is an invalid specification for attribute {}'.format(line[1:], line[0]))
                         
-                        exit()
+                        
             case _:
-                print("Error: {} is an invalid attribute specification.".format(line[0]))
+                raise Exception("Error: {} is an invalid attribute specification.".format(line[0]))
                 
                 
 my_query = select + " " + from1 + " " + where + " " + group_by
